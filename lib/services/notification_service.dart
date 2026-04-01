@@ -55,3 +55,7 @@ class InterviewNotificationService {
     }
   }
 }
+
+/// Backward-compatible alias for older imports/usages.
+@Deprecated('Use InterviewNotificationService')
+typedef FirestoreService = InterviewNotificationService;

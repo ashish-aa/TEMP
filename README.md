@@ -35,6 +35,9 @@ This project had both Agora and a second Flutter-WebRTC/Firestore signaling impl
 
 To keep the app reliable and maintainable, the project now uses **only Agora** for calls.
 
+To reduce merge conflicts with older branches, compatibility shims are kept for
+`MeetingScreen` and `MeetingService`, but both forward to Agora-backed flows.
+
 ---
 
 ## Setup (step-by-step)

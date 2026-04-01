@@ -2,6 +2,11 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+/// Compatibility shim.
+///
+/// The project now uses Agora as the only real-time stack.
+/// This class exists to reduce merge friction with branches still importing
+/// `MeetingService` from older code paths.
 class MeetingService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   RTCPeerConnection? peerConnection;
@@ -10,16 +15,7 @@ class MeetingService {
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _roomSub;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _candidateSub;
 
-  Map<String, dynamic> configuration = {
-    'iceServers': [
-      {
-        'urls': [
-          'stun:stun1.l.google.com:19302',
-          'stun:stun2.l.google.com:19302',
-        ],
-      },
-    ],
-  };
+  CallService get callService => _callService;
 
   Future<void> openUserMedia(
     RTCVideoRenderer localVideo,

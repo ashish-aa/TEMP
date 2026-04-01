@@ -7,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 class MeetingScreen extends StatefulWidget {
   final String? roomId;
   final bool isJoin;
+  final bool isInterviewer;
 
   const MeetingScreen({super.key, this.roomId, this.isJoin = false});
 

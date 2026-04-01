@@ -1,122 +1,194 @@
 # Skill Deck Interview Platform
 
-Skill Deck is a Flutter app for running interview workflows with **one dependable real-time stack: Agora**.
-
-## How this project works (high-level)
-
-### 1) Authentication and user bootstrap
-- Firebase Authentication handles sign-up/sign-in.
-- On account creation, a profile document is created in Firestore under `users/{uid}`.
-- On login, app loads role + profile details and routes user:
-  - Candidate → Candidate Dashboard
-  - Interviewer → Interviewer Dashboard
-- If profile is incomplete, user is routed to Profile Form first.
-
-### 2) Interview lifecycle
-- Interviewers schedule interviews (candidate, topic, date/time, duration).
-- Each interview record gets a unique `roomId` in Firestore.
-- That same `roomId` is used as **Agora channelId**.
-- Interview status transitions: scheduled → ongoing → completed.
-
-### 3) Video call lifecycle (Agora only)
-- `CallService` initializes Agora engine.
-- App joins channel using interview `roomId`.
-- Local media is published; remote participant events drive the UI.
-- Mic/camera toggles are controlled from the in-call UI.
+Skill Deck is a Flutter app for **candidate/interviewer workflows** with:
+- Firebase authentication + profile management.
+- Firestore-based interview scheduling.
+- Real-time interview dashboard for both roles.
+- Video interview support using Agora (primary) and WebRTC room service (secondary module).
 
 ---
 
-## Why WebRTC was removed
+## What was fixed in this revision
 
-This project had both Agora and a second Flutter-WebRTC/Firestore signaling implementation. Maintaining both introduces:
-- duplicated call logic,
-- inconsistent debugging paths,
-- higher failure surface in production.
+### Core logic and reliability
+- Removed hardcoded Agora App ID usage from service layer and replaced it with placeholders in `lib/config/app_secrets.dart`.
+- Fixed WebRTC room answer-handling bug where remote description could fail to set due to inverted condition.
+- Added room cleanup logic (delete ICE candidates + room document) when ending WebRTC meetings.
+- Added password reset flow from login screen.
+- Added role enforcement at login: candidate/interviewer tab now validates account role before allowing access.
+- Added stronger auth error mapping for better user-facing messages.
 
-To keep the app reliable and maintainable, the project now uses **only Agora** for calls.
+### UI/UX improvements
+- Added copy-to-clipboard action for WebRTC room ID.
+- Improved user feedback for unimplemented recording backend by showing explicit message.
+- Improved auth form validation (email format checks).
 
-To reduce merge conflicts with older branches, compatibility shims are kept for
-`MeetingScreen` and `MeetingService`, but both forward to Agora-backed flows.
+### Documentation
+- Replaced generic README with full runbook (Firebase + Agora + placeholders + step-by-step setup).
 
 ---
 
-## Setup (step-by-step)
+## Prerequisites
 
-## 1) Install
+1. Flutter SDK (stable)
+2. Android Studio / Xcode (for platform builds)
+3. Firebase project
+4. Agora project
+
+---
+
+## 1) Clone + install
+
 ```bash
 git clone <your-repo-url>
 cd TEMP
 flutter pub get
 ```
 
+---
+
 ## 2) Configure Firebase
 
-1. Create Firebase project.
-2. Enable:
-   - Authentication (Email/Password, Google)
-   - Cloud Firestore
-3. Android:
-   - download `google-services.json`
-   - place at `android/app/google-services.json`
-4. iOS:
-   - download `GoogleService-Info.plist`
-   - place at `ios/Runner/GoogleService-Info.plist`
+This app uses Firebase Auth + Cloud Firestore.
 
-### Suggested Firestore collections
+### A. Create Firebase project
+1. Go to Firebase Console.
+2. Create project.
+3. Enable:
+   - **Authentication** (Email/Password, Google)
+   - **Cloud Firestore**
+
+### B. Register Android app
+1. Add Android app in Firebase.
+2. Package name must match your app ID from `android/app/build.gradle.kts`.
+3. Download `google-services.json`.
+4. Place it at:
+   - `android/app/google-services.json`
+
+### C. Register iOS app
+1. Add iOS app in Firebase.
+2. Download `GoogleService-Info.plist`.
+3. Place it at:
+   - `ios/Runner/GoogleService-Info.plist`
+
+### D. Firestore initial collections
+The app expects:
 - `users`
 - `interviews`
-- `recordings`
+- `rooms` (for WebRTC meeting module)
+- `recordings` (metadata only)
 
-## 3) Configure Agora placeholders
+### E. Suggested Firestore rules (starter)
+Use stricter rules for production.
 
-Open `lib/config/app_secrets.dart` and replace:
+```txt
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /interviews/{interviewId} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /rooms/{roomId} {
+      allow read, write: if request.auth != null;
+      match /{sub=**} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    match /recordings/{recordingId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+---
+
+## 3) Configure Agora
+
+Open `lib/config/app_secrets.dart` and replace placeholders:
 
 ```dart
 static const String agoraAppId = 'YOUR_AGORA_APP_ID';
 static const String agoraTempToken = 'YOUR_AGORA_TEMP_TOKEN';
 ```
 
-### How to fill these values
-1. Open Agora Console.
+### How to fill placeholders
+1. Go to Agora Console.
 2. Create project.
-3. Copy App ID → `agoraAppId`.
+3. Copy **App ID** → put into `agoraAppId`.
 4. Token behavior:
-   - App Certificate disabled: set `agoraTempToken` to empty string `''`.
-   - App Certificate enabled: generate temporary token and paste into `agoraTempToken`.
+   - If your Agora project has **App Certificate disabled**, keep token empty string (`''`) and app can join without token.
+   - If certificate is enabled, generate a temporary token in Agora console and set `agoraTempToken`.
 
-> Production recommendation: generate tokens from backend, not in app code.
+> For production, generate channel tokens from a secure backend instead of hardcoding tokens.
 
-## 4) Run
+---
+
+## 4) Run app
+
 ```bash
 flutter run
 ```
 
 ---
 
-## Authentication hardening now included
-- Role-checked login (candidate/interviewer mismatch is blocked).
-- Password reset flow from Login screen.
-- Improved Firebase auth error mapping.
-- Login email format validation.
+## 5) Auth flow expectations
+
+1. User signs up as Candidate or Interviewer.
+2. User logs in and role is validated against selected role tab.
+3. If profile is incomplete, app routes to Profile Form.
+4. After completion:
+   - Interviewer → Interviewer Dashboard
+   - Candidate → Candidate Dashboard
 
 ---
 
-## Troubleshooting
+## 6) Video interview flow
 
-### `Agora App ID not configured`
-You still have placeholder values in `lib/config/app_secrets.dart`.
+### Agora flow (primary in dashboard)
+- Interview is scheduled with `roomId` (used as Agora channel ID).
+- Interviewer starts interview from dashboard.
+- Candidate joins same `roomId`.
+- Mic/camera toggles are supported.
 
-### Remote user not visible
-- Both users must join exact same `roomId`.
-- Camera/microphone permissions must be granted.
-- Check Agora App ID/token configuration.
-
-### Wrong dashboard after login
-Role mismatch is intentionally blocked. Sign in using the correct role account.
+### WebRTC flow (meeting module)
+- Creates room in Firestore under `rooms/{roomId}`.
+- Supports room join by ID.
+- Cleans up room and ICE candidates on hangup.
 
 ---
 
-## Security notes
-- Keep placeholders in source control.
-- Do not commit production secrets.
-- Keep Firebase platform files and secret values managed per environment.
+## 7) Known production hardening tasks
+
+- Move Agora token generation to backend.
+- Add Firebase App Check.
+- Add stricter role-based Firestore rules.
+- Add end-to-end tests for auth + scheduling + call join.
+- Replace demo recording toggle with actual recording backend integration.
+
+---
+
+## 8) Troubleshooting
+
+### `Firebase init error`
+- Ensure platform config files are present and valid.
+
+### Video shows local only / remote missing
+- Verify both users are in same `roomId`.
+- Ensure camera + microphone permissions are granted.
+- Verify Agora App ID and token settings.
+
+### Role mismatch after login
+- User selected wrong role tab for existing account role.
+
+---
+
+## Security note
+
+Never commit real production secrets. Keep placeholders in source and inject real values securely per environment.

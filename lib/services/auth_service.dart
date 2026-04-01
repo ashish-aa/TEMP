@@ -14,10 +14,12 @@ class AuthService {
 
   // Login with Email & Password
   Future<UserCredential> signInWithEmail(String email, String password) async {
-    return await _auth.signInWithEmailAndPassword(
+    final credential = await _auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
+    await credential.user?.reload();
+    return credential;
   }
 
   // Signup with Email & Password
@@ -111,6 +113,10 @@ class AuthService {
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
   }
 
   UserRole _roleFromString(String? role) {

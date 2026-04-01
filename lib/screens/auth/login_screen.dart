@@ -28,15 +28,78 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (success && mounted) {
-      // Navigation is handled by AuthWrapper in main.dart
+      final expectedRole = _isCandidate ? 'candidate' : 'interviewer';
+      if (!auth.userMatchesRole(expectedRole)) {
+        await auth.signOut();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "This account is not a ${_isCandidate ? 'candidate' : 'interviewer'} account.",
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Login Successful 🎉")));
+      ).showSnackBar(const SnackBar(content: Text("Login successful.")));
     } else if (mounted && auth.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error!), backgroundColor: Colors.red),
       );
     }
+  }
+
+  Future<void> _showResetPasswordDialog() async {
+    final resetController = TextEditingController(text: _email.text.trim());
+    final auth = Provider.of<AppAuthProvider>(context, listen: false);
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Reset Password"),
+          content: TextField(
+            controller: resetController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              labelText: "Email",
+              hintText: "you@example.com",
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final email = resetController.text.trim();
+                if (email.isEmpty) return;
+                final ok = await auth.sendPasswordResetEmail(email);
+                if (!mounted) return;
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      ok
+                          ? "Password reset email sent."
+                          : (auth.error ?? "Unable to send reset email."),
+                    ),
+                    backgroundColor: ok ? null : Colors.red,
+                  ),
+                );
+              },
+              child: const Text("Send"),
+            ),
+          ],
+        );
+      },
+    );
+    resetController.dispose();
   }
 
   @override
@@ -146,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: () {},
+                          onPressed: _showResetPasswordDialog,
                           child: const Text(
                             "Forgot password?",
                             style: TextStyle(
@@ -214,7 +277,26 @@ class _LoginScreenState extends State<LoginScreen> {
                 OutlinedButton.icon(
                   onPressed: auth.isLoading
                       ? null
-                      : () => auth.signInWithGoogle(),
+                      : () async {
+                          final ok = await auth.signInWithGoogle();
+                          if (!mounted || ok == false) return;
+                          final expectedRole = _isCandidate
+                              ? 'candidate'
+                              : 'interviewer';
+                          if (!auth.userMatchesRole(expectedRole)) {
+                            await auth.signOut();
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Google account role mismatch. Use the correct tab or sign up again.",
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
                   icon: Image.network(
                     'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg',
                     height: 24,
@@ -312,7 +394,14 @@ class _LoginScreenState extends State<LoginScreen> {
         TextFormField(
           controller: controller,
           obscureText: isPass && _hidePass,
-          validator: (v) => v == null || v.isEmpty ? "Required" : null,
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) return "Required";
+            if (!isPass &&
+                !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v.trim())) {
+              return "Enter a valid email";
+            }
+            return null;
+          },
           decoration: InputDecoration(
             prefixIcon: Icon(icon, size: 20, color: const Color(0xFF94A3B8)),
             suffixIcon: isPass

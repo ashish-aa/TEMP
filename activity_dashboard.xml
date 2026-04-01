@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8FAFC">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- 🔝 HEADER -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:background="@android:color/white"
+            android:gravity="center_vertical"
+            android:elevation="4dp">
+
+            <TextView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:text="SD"
+                android:gravity="center"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:background="@drawable/bg_circle_blue"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Skill Deck"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#111827"
+                android:layout_marginStart="12dp"/>
+
+            <TextView
+                android:id="@+id/tvUser"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:text="AJ"
+                android:gravity="center"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:background="@drawable/bg_circle_blue"/>
+        </LinearLayout>
+
+        <!-- 📄 CONTENT -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:orientation="vertical">
+
+            <!-- Welcome -->
+            <TextView
+                android:id="@+id/tvWelcome"
+                android:text="Welcome back, User!"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#111827"/>
+
+            <TextView
+                android:text="Your interview progress"
+                android:textColor="#6B7280"
+                android:layout_marginTop="4dp"/>
+
+            <!-- 🔥 CARD 1 -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_marginTop="20dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:padding="20dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:text="Interviews Completed"
+                        android:textColor="#6B7280"/>
+
+                    <TextView
+                        android:id="@+id/tvCount"
+                        android:text="12"
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        android:textColor="#111827"/>
+
+                    <ProgressBar
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:progress="70"
+                        android:progressTint="#2563EB"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- 🔥 CARD 2 -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:padding="20dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:text="Performance"
+                        android:textColor="#6B7280"/>
+
+                    <TextView
+                        android:text="85%"
+                        android:textSize="30sp"
+                        android:textStyle="bold"/>
+
+                    <ProgressBar
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:progress="85"
+                        android:progressTint="#10B981"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- 🚀 BUTTON -->
+            <Button
+                android:id="@+id/btnStart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Start Interview"
+                android:textColor="@android:color/white"
+                android:layout_marginTop="24dp"
+                android:backgroundTint="#2563EB"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

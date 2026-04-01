@@ -1,0 +1,65 @@
+{
+  "user": {
+    "id": "usr_12345",
+    "firstName": "Alex",
+    "lastName": "Johnson",
+    "initials": "AJ",
+    "email": "alex.johnson@example.com",
+    "phone": "+1 (555) 123-4567",
+    "location": "San Francisco, CA",
+    "headline": "Full Stack Developer | React & Node.js Enthusiast",
+    "summary": "Passionate developer with 5 years of experience building scalable web applications..."
+  },
+  "dashboardStats": {
+    "interviewsCompleted": {
+      "value": 12,
+      "trendText": "+2 this week"
+    },
+    "averagePerformance": {
+      "value": "78%",
+      "trendText": "+5% improvement"
+    },
+    "feedbackScore": {
+      "value": "4.7/5",
+      "trendText": "From interviewers"
+    }
+  },
+  "upcomingInterviews": [
+    {
+      "id": "int_8891",
+      "topic": "Mock Technical",
+      "stack": "React & JavaScript",
+      "time": "2:00 PM - 2:30 PM",
+      "statusTag": "Today"
+    }
+  ],
+  "recordedInterviews": [
+    {
+      "id": "rec_001",
+      "title": "React Advanced Concepts",
+      "status": "Completed",
+      "date": "March 10, 2024",
+      "duration": "28m",
+      "actionLinks": {
+        "watch": "https://api.skilldeck.com/recordings/rec_001/stream",
+        "download": "https://api.skilldeck.com/recordings/rec_001/download"
+      }
+    },
+    {
+      "id": "rec_002",
+      "title": "JavaScript Problem Solving",
+      "status": "Completed",
+      "date": "March 8, 2024",
+      "duration": "32m",
+      "actionLinks": {
+        "watch": "https://api.skilldeck.com/recordings/rec_002/stream",
+        "download": "https://api.skilldeck.com/recordings/rec_002/download"
+      }
+    }
+  ],
+  "settings": {
+    "notifications": {
+      "pushEnabled": true
+    }
+  }
+}

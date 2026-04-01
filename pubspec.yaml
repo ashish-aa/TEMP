@@ -1,0 +1,43 @@
+name: interview
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.10.3 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  google_fonts: ^6.1.0
+  cupertino_icons: ^1.0.8
+  firebase_core: ^3.15.2
+  firebase_auth: ^5.4.4
+  cloud_firestore: ^5.6.12
+  firebase_storage: ^12.4.10
+  firebase_messaging: ^15.2.10
+  provider: ^6.1.1
+  camera: ^0.11.0+1
+  path_provider: ^2.1.2
+  path: ^1.9.0
+  video_player: ^2.8.2
+  intl: ^0.18.1
+  permission_handler: ^11.3.1
+  google_sign_in: ^6.2.1
+  speech_to_text: ^7.0.0
+  shared_preferences: ^2.2.2
+  file_picker: ^8.1.7
+  connectivity_plus: ^5.0.2
+  internet_connection_checker: ^1.0.0+1
+  agora_rtc_engine: ^6.3.2
+  flutter_webrtc: ^0.12.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

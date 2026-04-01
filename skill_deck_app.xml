@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SkillDeckApp>
+    
+    <Screen id="auth_screen">
+        <Header>
+            <Logo icon="briefcase_blue" />
+            <Title>Skill Deck</Title>
+            <Subtitle>Modern Recruitment Platform</Subtitle>
+        </Header>
+        
+        <Tabs active="Candidate">
+            <Tab id="candidate_toggle">Candidate</Tab>
+            <Tab id="interviewer_toggle">Interviewer</Tab>
+        </Tabs>
+
+        <Form type="sign_in">
+            <Field type="email" label="Email Address" placeholder="you@example.com" />
+            <Field type="password" label="Password" hasToggleVisibility="true" />
+            <Action type="submit" label="Sign In" color="primary_blue" />
+        </Form>
+
+        <Form type="sign_up">
+            <Field type="text" label="Full Name" placeholder="John Doe" />
+            <Field type="email" label="Email Address" />
+            <Field type="password" label="Password" note="min 8 characters" />
+            <Field type="password" label="Confirm Password" />
+            <Action type="submit" label="Create Account" />
+        </Form>
+
+        <SocialAuth>
+            <Divider text="Or continue with" />
+            <Button provider="Google" icon="google_logo" label="Sign in with Google" />
+        </SocialAuth>
+
+        <FooterLink action="toggle_mode" text="Don't have an account? Create one" />
+    </Screen>
+
+    <Screen id="candidate_dashboard">
+        <Navigation>
+            <Brand name="Skill Deck" />
+            <UserMenu current_user="Alex Johnson" initial="AJ">
+                <MenuItem id="view_profile" icon="user" />
+                <MenuItem id="settings" icon="settings" />
+                <MenuItem id="logout" icon="logout" color="red" />
+            </UserMenu>
+        </Navigation>
+
+        <Greeting text="Welcome back, Alex!" subtext="Here's your interview preparation progress" />
+
+        <StatsGrid>
+            <StatCard label="Interviews Completed" value="12" trend="+2 this week" icon="users" />
+            <StatCard label="Avg. Performance" value="78%" trend="+5% improvement" icon="trending_up" />
+            <StatCard label="Feedback Score" value="4.7/5" trend="From interviewers" icon="bar_chart" />
+        </StatsGrid>
+
+        <Section title="Upcoming Interviews">
+            <InterviewCard status="Today">
+                <Topic>Mock Technical</Topic>
+                <Stack>React &amp; JavaScript</Stack>
+                <Time>2:00 PM - 2:30 PM</Time>
+                <Action type="primary" label="Start Interview" icon="play_arrow" />
+            </InterviewCard>
+        </Section>
+
+        <Section title="Recorded Mock Interviews">
+            <RecordingItem status="Completed">
+                <Title>React Advanced Concepts</Title>
+                <Metadata duration="28 minutes" date="March 10, 2024" />
+                <ButtonGroup>
+                    <Action label="Watch Recording" variant="ghost" />
+                    <Action label="Download" variant="outline" />
+                </ButtonGroup>
+            </RecordingItem>
+        </Section>
+    </Screen>
+
+    <Modal id="user_profile" title="Your Profile">
+        <Section title="Personal Information">
+            <Row>
+                <Field label="First Name" value="Alex" />
+                <Field label="Last Name" value="Johnson" />
+            </Row>
+            <Field label="Email" value="alex.johnson@example.com" />
+            <Field label="Phone" value="+1 (555) 123-4567" />
+            <Field label="Location" value="San Francisco, CA" />
+            <Field label="Professional Headline" value="Full Stack Developer | React &amp; Node.js Enthusiast" />
+        </Section>
+        <Section title="Professional Summary">
+            <TextArea value="Passionate developer with 5 years of experience building scalable web applications..." />
+        </Section>
+        <Footer>
+            <Action type="cancel" label="Cancel" />
+            <Action type="save" label="Save Profile" />
+        </Footer>
+    </Modal>
+
+    <Modal id="settings" title="Settings">
+        <Group icon="bell" title="Notifications">
+            <SettingItem type="toggle" label="Push Notifications" state="on" />
+        </Group>
+        <Group icon="mail" title="Account">
+            <Info label="Email Address" value="alex.johnson@example.com" />
+            <Action type="danger" label="Delete Account" />
+        </Group>
+    </Modal>
+
+</SkillDeckApp>

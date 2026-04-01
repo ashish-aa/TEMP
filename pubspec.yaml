@@ -32,7 +32,6 @@ dependencies:
   connectivity_plus: ^5.0.2
   internet_connection_checker: ^1.0.0+1
   agora_rtc_engine: ^6.3.2
-  flutter_webrtc: ^0.12.1
 
 dev_dependencies:
   flutter_test:

@@ -1,11 +1,8 @@
-import 'dart:async';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../config/app_secrets.dart';
 
 class CallService {
-  // Replace with your actual Agora App ID from Agora Console
-  static const String appId = "782ab94df0a24b9686ebe098aa26daa7";
-
   RtcEngine? _engine;
   int? _remoteUid;
   int? get remoteUid => _remoteUid;
@@ -13,6 +10,12 @@ class CallService {
   Function? onStateChanged;
 
   Future<void> initAgora() async {
+    if (!AppSecrets.hasValidAgoraAppId) {
+      throw Exception(
+        "Agora App ID not configured. Update lib/config/app_secrets.dart",
+      );
+    }
+
     // Permissions check
     await [Permission.camera, Permission.microphone].request();
 
@@ -20,7 +23,7 @@ class CallService {
     _engine = createAgoraRtcEngine();
     await _engine!.initialize(
       const RtcEngineContext(
-        appId: appId,
+        appId: AppSecrets.agoraAppId,
         channelProfile: ChannelProfileType.channelProfileCommunication,
       ),
     );
@@ -71,7 +74,7 @@ class CallService {
 
     // Step 2: JOIN CHANNEL (Publish tracks explicitly)
     await _engine!.joinChannel(
-      token: token ?? '',
+      token: token ?? _safeToken(),
       channelId: channelName,
       uid: uid,
       options: const ChannelMediaOptions(
@@ -82,6 +85,15 @@ class CallService {
         clientRoleType: ClientRoleType.clientRoleBroadcaster,
       ),
     );
+  }
+
+  String _safeToken() {
+    const placeholder = 'YOUR_AGORA_TEMP_TOKEN';
+    if (AppSecrets.agoraTempToken.isEmpty ||
+        AppSecrets.agoraTempToken == placeholder) {
+      return '';
+    }
+    return AppSecrets.agoraTempToken;
   }
 
   Future<void> leaveChannel() async {

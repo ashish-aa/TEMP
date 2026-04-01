@@ -126,10 +126,13 @@ class AppAuthProvider extends ChangeNotifier {
     _setError(null);
     try {
       final cred = await _authService.signInWithGoogle();
-      if (cred != null && cred.user != null) {
-        _userModel = await _authService.getUserModel(cred.user!.uid);
+      if (cred == null || cred.user == null) {
+        _setError("Google sign-in cancelled.");
+        return false;
       }
-      return true;
+
+      _userModel = await _authService.getUserModel(cred.user!.uid);
+      return _userModel != null;
     } catch (e) {
       _setError("Google sign-in failed");
       return false;

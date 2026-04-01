@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../services/meeting_service.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -70,6 +71,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
 
   @override
   void dispose() {
+    _meetingService.hangUp(_localRenderer, roomId: currentRoomId);
     _localRenderer.dispose();
     _remoteRenderer.dispose();
     super.dispose();
@@ -97,7 +99,13 @@ class _MeetingScreenState extends State<MeetingScreen> {
     setState(() {
       _isRecording = !_isRecording;
     });
-    // Implement real recording logic if needed
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Recording metadata is not configured yet. Add cloud recording to enable this.",
+        ),
+      ),
+    );
   }
 
   @override
@@ -144,9 +152,12 @@ class _MeetingScreenState extends State<MeetingScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: ElevatedButton.icon(
+              child: ElevatedButton.icon(
               onPressed: () async {
-                await _meetingService.hangUp(_localRenderer);
+                await _meetingService.hangUp(
+                  _localRenderer,
+                  roomId: currentRoomId,
+                );
                 if (mounted) Navigator.pop(context);
               },
               icon: const Icon(Icons.call_end, size: 18),
@@ -171,6 +182,22 @@ class _MeetingScreenState extends State<MeetingScreen> {
               child: Text(
                 "Room ID: $currentRoomId",
                 style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+            ),
+          if (currentRoomId != null)
+            TextButton.icon(
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: currentRoomId!));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Room ID copied")),
+                  );
+                }
+              },
+              icon: const Icon(Icons.copy, size: 16, color: Colors.white70),
+              label: const Text(
+                "Copy",
+                style: TextStyle(color: Colors.white70),
               ),
             ),
           Expanded(

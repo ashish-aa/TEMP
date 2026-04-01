@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
@@ -6,6 +7,8 @@ class MeetingService {
   RTCPeerConnection? peerConnection;
   MediaStream? localStream;
   MediaStream? remoteStream;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _roomSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _candidateSub;
 
   Map<String, dynamic> configuration = {
     'iceServers': [
@@ -30,7 +33,8 @@ class MeetingService {
     localVideo.srcObject = stream;
     localStream = stream;
 
-    remoteVideo.srcObject = await createLocalMediaStream('key');
+    remoteStream = await createLocalMediaStream('remote');
+    remoteVideo.srcObject = remoteStream;
   }
 
   Future<String> createRoom(RTCVideoRenderer remoteRenderer) async {
@@ -66,10 +70,10 @@ class MeetingService {
     };
 
     // Listening for remote session description
-    roomRef.snapshots().listen((snapshot) async {
+    _roomSub = roomRef.snapshots().listen((snapshot) async {
       if (snapshot.exists) {
         Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-        if (peerConnection?.getRemoteDescription() != null &&
+        if (peerConnection?.getRemoteDescription() == null &&
             data['answer'] != null) {
           var answer = RTCSessionDescription(
             data['answer']['sdp'],
@@ -81,7 +85,10 @@ class MeetingService {
     });
 
     // Listen for remote ICE candidates
-    roomRef.collection('calleeCandidates').snapshots().listen((snapshot) {
+    _candidateSub = roomRef
+        .collection('calleeCandidates')
+        .snapshots()
+        .listen((snapshot) {
       for (var change in snapshot.docChanges) {
         if (change.type == DocumentChangeType.added) {
           Map<String, dynamic> data = change.doc.data() as Map<String, dynamic>;
@@ -156,7 +163,7 @@ class MeetingService {
     }
   }
 
-  Future<void> hangUp(RTCVideoRenderer localVideo) async {
+  Future<void> hangUp(RTCVideoRenderer localVideo, {String? roomId}) async {
     var tracks = localVideo.srcObject?.getTracks();
     tracks?.forEach((track) {
       track.stop();
@@ -167,8 +174,31 @@ class MeetingService {
     }
 
     if (peerConnection != null) peerConnection!.close();
+    await _roomSub?.cancel();
+    await _candidateSub?.cancel();
+    _roomSub = null;
+    _candidateSub = null;
+
+    if (roomId != null && roomId.isNotEmpty) {
+      await _deleteRoom(roomId);
+    }
 
     localVideo.srcObject = null;
+  }
+
+  Future<void> _deleteRoom(String roomId) async {
+    final roomRef = _db.collection('rooms').doc(roomId);
+    final calleeCandidates = await roomRef.collection('calleeCandidates').get();
+    for (final doc in calleeCandidates.docs) {
+      await doc.reference.delete();
+    }
+
+    final callerCandidates = await roomRef.collection('callerCandidates').get();
+    for (final doc in callerCandidates.docs) {
+      await doc.reference.delete();
+    }
+
+    await roomRef.delete();
   }
 
   void registerPeerConnectionListeners() {

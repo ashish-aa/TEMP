@@ -279,18 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? null
                       : () async {
                           final ok = await auth.signInWithGoogle();
-                          if (!mounted) return;
-                          if (!ok) {
-                            if (auth.error != null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(auth.error!),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                            return;
-                          }
+                          if (!mounted || ok == false) return;
                           final expectedRole = _isCandidate
                               ? 'candidate'
                               : 'interviewer';

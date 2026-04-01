@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/interview_model.dart';
 
-class FirestoreService {
+class InterviewNotificationService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   /// STREAM INTERVIEWS
@@ -55,3 +55,7 @@ class FirestoreService {
     }
   }
 }
+
+/// Backward-compatible alias for older imports/usages.
+@Deprecated('Use InterviewNotificationService')
+typedef FirestoreService = InterviewNotificationService;

@@ -73,6 +73,25 @@ class AppAuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> sendPasswordResetEmail(String email) async {
+    _setError(null);
+    try {
+      await _authService.sendPasswordResetEmail(email.trim());
+      return true;
+    } catch (e) {
+      _setError(_getReadableError(e));
+      return false;
+    }
+  }
+
+  bool userMatchesRole(String role) {
+    final current = _userModel;
+    if (current == null) return false;
+    if (role == 'candidate') return current.isCandidate;
+    if (role == 'interviewer') return current.isInterviewer;
+    return false;
+  }
+
   Future<bool> signUp({
     required String email,
     required String password,
@@ -107,10 +126,13 @@ class AppAuthProvider extends ChangeNotifier {
     _setError(null);
     try {
       final cred = await _authService.signInWithGoogle();
-      if (cred != null && cred.user != null) {
-        _userModel = await _authService.getUserModel(cred.user!.uid);
+      if (cred == null || cred.user == null) {
+        _setError("Google sign-in cancelled.");
+        return false;
       }
-      return true;
+
+      _userModel = await _authService.getUserModel(cred.user!.uid);
+      return _userModel != null;
     } catch (e) {
       _setError("Google sign-in failed");
       return false;
@@ -140,6 +162,12 @@ class AppAuthProvider extends ChangeNotifier {
           return 'Email is already registered.';
         case 'invalid-email':
           return 'Invalid email address format.';
+        case 'invalid-credential':
+          return 'Invalid email or password.';
+        case 'too-many-requests':
+          return 'Too many attempts. Try again later.';
+        case 'network-request-failed':
+          return 'Network error. Please check your connection.';
         default:
           return e.message ?? 'Authentication failed.';
       }

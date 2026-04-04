@@ -45,10 +45,14 @@ class _SignupScreenState extends State<SignupScreen> {
     );
 
     if (success && mounted) {
+      await auth.signOut();
+      if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Account created successfully! Please login."),
+          content: Text(
+            'Account created. Please verify your email before signing in.',
+          ),
         ),
       );
     } else if (mounted && auth.error != null) {
@@ -322,8 +326,15 @@ class _SignupScreenState extends State<SignupScreen> {
               borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
             ),
           ),
-          validator: (value) =>
-              value == null || value.isEmpty ? 'Required' : null,
+          validator: (value) {
+            final input = value?.trim() ?? '';
+            if (input.isEmpty) return 'Required';
+            if (label.toLowerCase().contains('email')) {
+              final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+              if (!emailRegex.hasMatch(input)) return 'Enter a valid email';
+            }
+            return null;
+          },
         ),
       ],
     );

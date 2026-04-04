@@ -1,42 +1,42 @@
 {
   "project_info": {
-    "project_number": "891810609992",
-    "firebase_url": "https://interview-5da43-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "project_id": "interview-5da43",
-    "storage_bucket": "interview-5da43.firebasestorage.app"
+    "project_number": "YOUR_PROJECT_NUMBER",
+    "firebase_url": "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    "project_id": "YOUR_PROJECT_ID",
+    "storage_bucket": "YOUR_PROJECT_ID.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:891810609992:android:635e897b2fe89373e8d17d",
+        "mobilesdk_app_id": "YOUR_MOBILE_SDK_APP_ID",
         "android_client_info": {
           "package_name": "com.example.interview"
         }
       },
       "oauth_client": [
         {
-          "client_id": "891810609992-l1crupl117ep0tt0s1fu4j8jn5jj9v2r.apps.googleusercontent.com",
+          "client_id": "YOUR_ANDROID_OAUTH_CLIENT_ID.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.interview",
-            "certificate_hash": "38add79127360b80fa97c248fbb75cfcbd414d89"
+            "certificate_hash": "YOUR_SHA1"
           }
         },
         {
-          "client_id": "891810609992-c0ehoucgnts0p736n97g5ok7jgkqdh87.apps.googleusercontent.com",
+          "client_id": "YOUR_WEB_OAUTH_CLIENT_ID.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyB9F7LkvI15hoGsnZpHo43kSY-gB-7QRXA"
+          "current_key": "YOUR_FIREBASE_API_KEY"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "891810609992-c0ehoucgnts0p736n97g5ok7jgkqdh87.apps.googleusercontent.com",
+              "client_id": "YOUR_WEB_OAUTH_CLIENT_ID.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

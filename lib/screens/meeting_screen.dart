@@ -1,15 +1,20 @@
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
+
 import '../services/meeting_service.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class MeetingScreen extends StatefulWidget {
   final String? roomId;
   final bool isJoin;
   final bool isInterviewer;
 
-  const MeetingScreen({super.key, this.roomId, this.isJoin = false});
+  const MeetingScreen({
+    super.key,
+    this.roomId,
+    this.isJoin = false,
+    this.isInterviewer = false,
+  });
 
   @override
   State<MeetingScreen> createState() => _MeetingScreenState();
@@ -17,337 +22,170 @@ class MeetingScreen extends StatefulWidget {
 
 class _MeetingScreenState extends State<MeetingScreen> {
   final MeetingService _meetingService = MeetingService();
-  final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
-  final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
 
-  String? currentRoomId;
   bool _isMicOn = true;
   bool _isCameraOn = true;
-  bool _isRecording = false;
+  bool _isLoading = true;
+  late final String _channelName;
 
   @override
   void initState() {
     super.initState();
-    _initRenderers();
+    _channelName = (widget.roomId ?? '').trim().isNotEmpty
+        ? widget.roomId!.trim()
+        : _meetingService.createRoomId();
     _startSession();
   }
 
-  Future<void> _initRenderers() async {
-    await _localRenderer.initialize();
-    await _remoteRenderer.initialize();
-  }
-
   Future<void> _startSession() async {
-    // Request permissions
-    var status = await [Permission.camera, Permission.microphone].request();
-    if (status[Permission.camera]!.isDenied ||
-        status[Permission.microphone]!.isDenied) {
+    try {
+      await _meetingService.initialize(onStateChanged: () {
+        if (mounted) setState(() {});
+      });
+      await _meetingService.joinRoom(
+        roomId: _channelName,
+        isInterviewer: widget.isInterviewer,
+      );
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Camera and Microphone permissions are required"),
+          SnackBar(
+            content: Text('Could not start meeting: $e'),
+            backgroundColor: Colors.red,
           ),
         );
-        Navigator.pop(context);
       }
-      return;
-    }
-
-    await _meetingService.openUserMedia(_localRenderer, _remoteRenderer);
-
-    if (widget.isJoin && widget.roomId != null) {
-      await _meetingService.joinRoom(widget.roomId!, _remoteRenderer);
-      setState(() {
-        currentRoomId = widget.roomId;
-      });
-    } else {
-      String id = await _meetingService.createRoom(_remoteRenderer);
-      setState(() {
-        currentRoomId = id;
-      });
-      // In a real app, you'd share this ID with the interviewer/candidate
-      print("Room ID created: $id");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   @override
   void dispose() {
-    _meetingService.hangUp(_localRenderer, roomId: currentRoomId);
-    _localRenderer.dispose();
-    _remoteRenderer.dispose();
+    _meetingService.leaveRoom();
     super.dispose();
   }
 
   void _toggleMic() {
-    setState(() {
-      _isMicOn = !_isMicOn;
-    });
-    _meetingService.localStream?.getAudioTracks().forEach((track) {
-      track.enabled = _isMicOn;
-    });
+    setState(() => _isMicOn = !_isMicOn);
+    _meetingService.callService.toggleMic(_isMicOn);
   }
 
   void _toggleCamera() {
-    setState(() {
-      _isCameraOn = !_isCameraOn;
-    });
-    _meetingService.localStream?.getVideoTracks().forEach((track) {
-      track.enabled = _isCameraOn;
-    });
-  }
-
-  void _toggleRecording() {
-    setState(() {
-      _isRecording = !_isRecording;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Recording metadata is not configured yet. Add cloud recording to enable this.",
-        ),
-      ),
-    );
+    setState(() => _isCameraOn = !_isCameraOn);
+    _meetingService.callService.toggleCamera(_isCameraOn);
   }
 
   @override
   Widget build(BuildContext context) {
-    const bgColor = Color(0xFF111827);
-    const surfaceColor = Color(0xFF1F2937);
+    const bgColor = Color(0xFF0F172A);
     const primaryBlue = Color(0xFF2563EB);
-    const dangerRed = Color(0xFFEF4444);
+
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: bgColor,
+        body: Center(child: CircularProgressIndicator(color: primaryBlue)),
+      );
+    }
+
+    final remoteUid = _meetingService.callService.remoteUid;
 
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: primaryBlue,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                "IH",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              "Meeting Room",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-          ],
-        ),
+        foregroundColor: Colors.white,
+        title: const Text('Meeting Room'),
         actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: ElevatedButton.icon(
-              onPressed: () async {
-                await _meetingService.hangUp(
-                  _localRenderer,
-                  roomId: currentRoomId,
+          IconButton(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: _channelName));
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Room ID copied to clipboard')),
                 );
-                if (mounted) Navigator.pop(context);
-              },
-              icon: const Icon(Icons.call_end, size: 18),
-              label: const Text("Leave"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: dangerRed,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
-              ),
-            ),
+              }
+            },
+            icon: const Icon(Icons.copy_outlined),
+            tooltip: 'Copy room ID',
           ),
+          const SizedBox(width: 8),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          if (currentRoomId != null)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
+          Positioned.fill(
+            child: remoteUid == null
+                ? _buildWaitingView(primaryBlue)
+                : AgoraVideoView(
+                    controller: VideoViewController.remote(
+                      rtcEngine: _meetingService.callService.engine!,
+                      canvas: VideoCanvas(uid: remoteUid),
+                      connection: RtcConnection(channelId: _channelName),
+                    ),
+                  ),
+          ),
+          Positioned(
+            top: 16,
+            left: 16,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.35),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Text(
-                "Room ID: $currentRoomId",
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-            ),
-          if (currentRoomId != null)
-            TextButton.icon(
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: currentRoomId!));
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Room ID copied")),
-                  );
-                }
-              },
-              icon: const Icon(Icons.copy, size: 16, color: Colors.white70),
-              label: const Text(
-                "Copy",
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Stack(
-                children: [
-                  // Main Video (Remote)
-                  Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    decoration: BoxDecoration(
-                      color: surfaceColor.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          RTCVideoView(_remoteRenderer),
-                          if (_remoteRenderer.srcObject == null)
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 100,
-                                  height: 100,
-                                  decoration: const BoxDecoration(
-                                    color: primaryBlue,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.person,
-                                    size: 50,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                const Text(
-                                  "Waiting for other participant...",
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          Positioned(
-                            bottom: 24,
-                            child: Text(
-                              _isCameraOn
-                                  ? "Your Camera is ON"
-                                  : "Your Camera is OFF",
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // PiP Video (Local)
-                  Positioned(
-                    top: 20,
-                    right: 20,
-                    child: Container(
-                      width: 120,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        color: surfaceColor,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: _isCameraOn
-                            ? RTCVideoView(_localRenderer, mirror: true)
-                            : const Center(
-                                child: Icon(
-                                  Icons.videocam_off,
-                                  color: Colors.white24,
-                                  size: 40,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ),
-                ],
+                'Room ID: $_channelName',
+                style: const TextStyle(color: Colors.white70),
               ),
             ),
           ),
-
-          // Bottom Controls
-          Padding(
-            padding: const EdgeInsets.only(bottom: 40, top: 20),
+          Positioned(
+            top: 74,
+            right: 16,
+            child: SizedBox(
+              width: 120,
+              height: 180,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: _isCameraOn
+                    ? AgoraVideoView(
+                        controller: VideoViewController(
+                          rtcEngine: _meetingService.callService.engine!,
+                          canvas: const VideoCanvas(uid: 0),
+                        ),
+                      )
+                    : Container(
+                        color: const Color(0xFF1F2937),
+                        child: const Icon(
+                          Icons.videocam_off,
+                          color: Colors.white54,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 32,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _ControlCircle(
-                  icon: _isMicOn ? Icons.mic : Icons.mic_off,
-                  isActive: _isMicOn,
-                  onTap: _toggleMic,
+                _control(_isMicOn ? Icons.mic : Icons.mic_off, _toggleMic),
+                const SizedBox(width: 16),
+                _control(
+                  _isCameraOn ? Icons.videocam : Icons.videocam_off,
+                  _toggleCamera,
                 ),
                 const SizedBox(width: 16),
-                _ControlCircle(
-                  icon: _isCameraOn ? Icons.videocam : Icons.videocam_off,
-                  isActive: _isCameraOn,
-                  onTap: _toggleCamera,
-                ),
-                const SizedBox(width: 16),
-                _ControlCircle(
-                  icon: Icons.fiber_manual_record,
-                  isActive: _isRecording,
-                  color: _isRecording
-                      ? dangerRed
-                      : Colors.white.withOpacity(0.1),
-                  onTap: _toggleRecording,
-                ),
-                const SizedBox(width: 16),
-                _ControlCircle(
-                  icon: Icons.chat_bubble_outline,
-                  isActive: false,
-                  onTap: () {
-                    // Chat logic
-                  },
-                ),
-                const SizedBox(width: 16),
-                _ControlCircle(
-                  icon: Icons.more_horiz,
-                  isActive: false,
-                  onTap: () {
-                    // More options
-                  },
-                ),
+                _control(Icons.call_end, () async {
+                  await _meetingService.leaveRoom();
+                  if (mounted) Navigator.pop(context);
+                }, danger: true),
               ],
             ),
           ),
@@ -356,27 +194,37 @@ class _MeetingScreenState extends State<MeetingScreen> {
     );
   }
 
-  Widget _ControlCircle({
-    required IconData icon,
-    required bool isActive,
-    Color? color,
-    VoidCallback? onTap,
-  }) {
+  Widget _control(IconData icon, VoidCallback onTap, {bool danger = false}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 56,
         height: 56,
         decoration: BoxDecoration(
-          color:
-              color ??
-              (isActive
-                  ? Colors.white.withOpacity(0.2)
-                  : Colors.white.withOpacity(0.1)),
+          color: danger ? Colors.red : Colors.white.withOpacity(0.15),
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
         ),
-        child: Icon(icon, color: Colors.white, size: 24),
+        child: Icon(icon, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildWaitingView(Color primaryBlue) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 56,
+            backgroundColor: primaryBlue.withOpacity(0.2),
+            child: const Icon(Icons.person, color: Colors.white54, size: 54),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Waiting for participant to join...',
+            style: TextStyle(color: Colors.white70),
+          ),
+        ],
       ),
     );
   }

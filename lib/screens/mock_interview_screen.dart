@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-import '../providers/auth_provider.dart';
 import '../services/call_service.dart';
 
 class MockInterviewScreen extends StatefulWidget {

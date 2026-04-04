@@ -1,19 +1,15 @@
 class AppSecrets {
   AppSecrets._();
 
-  /// Firebase configuration is expected via platform files:
-  /// - android/app/google-services.json
-  /// - ios/Runner/GoogleService-Info.plist
-  ///
-  /// Keep sensitive values out of source control for production builds.
+  /// Firebase configuration comes from:
+  /// - android/app/src/google-services.json
+  /// - android/app/google-services (7).json
 
-  /// Replace with Agora App ID from Agora Console.
-  static const String agoraAppId = 'YOUR_AGORA_APP_ID';
+  /// ZEGOCLOUD credentials
+  static const int zegoAppId = 628526500;
+  static const String zegoAppSign =
+      'd76bb5def9e68f29f24c12997bd5d3941186b3d9b825719c69895c9f14c7b8cd';
 
-  /// Optional: use a temporary token for testing.
-  /// Keep empty if your Agora project has App Certificate disabled.
-  static const String agoraTempToken = 'YOUR_AGORA_TEMP_TOKEN';
-
-  static bool get hasValidAgoraAppId =>
-      agoraAppId.isNotEmpty && agoraAppId != 'YOUR_AGORA_APP_ID';
+  static bool get hasValidZegoConfig =>
+      zegoAppId > 0 && zegoAppSign.isNotEmpty;
 }

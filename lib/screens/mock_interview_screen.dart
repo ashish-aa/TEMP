@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
-
-import '../config/app_secrets.dart';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import '../services/call_service.dart';
 
 class MockInterviewScreen extends StatelessWidget {

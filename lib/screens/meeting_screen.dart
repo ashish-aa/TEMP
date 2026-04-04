@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../services/meeting_service.dart';
 
-class MeetingScreen extends StatefulWidget {
+class MeetingScreen extends StatelessWidget {
   final String? roomId;
   final bool isJoin;
   final bool isInterviewer;

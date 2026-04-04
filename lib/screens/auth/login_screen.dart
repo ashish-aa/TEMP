@@ -278,7 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: auth.isLoading
                       ? null
                       : () async {
-                          final ok = await auth.signInWithGoogle();
+                          final ok = await auth.signInWithGoogle(role: _isCandidate ? 'candidate' : 'interviewer');
                           if (!mounted || ok == false) return;
                           final expectedRole = _isCandidate
                               ? 'candidate'
@@ -297,12 +297,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             }
                           }
                         },
-                  icon: Image.network(
-                    'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg',
-                    height: 24,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.g_mobiledata, color: Colors.red),
-                  ),
+                  icon: const Icon(Icons.g_mobiledata, color: Colors.red, size: 28),
                   label: const Text(
                     "Continue with Google",
                     style: TextStyle(

@@ -1,4 +1,4 @@
-# Android Setup Guide (Firebase + ZEGOCLOUD)
+# Android Setup Guide (Firebase + Agora)
 
 This guide makes the project run on Android after you fill placeholder values.
 
@@ -6,7 +6,7 @@ This guide makes the project run on Android after you fill placeholder values.
 1. Flutter stable installed.
 2. Android Studio + Android SDK.
 3. Firebase project.
-4. ZEGOCLOUD project.
+4. Agora project.
 
 ## 2) Install dependencies
 ```bash
@@ -32,15 +32,14 @@ Replace both files with your downloaded file:
 - `android/app/src/google-services.json`
 - `android/app/google-services (7).json`
 
-## 4) Configure ZEGOCLOUD
+## 4) Configure Agora
 Open `lib/config/app_secrets.dart` and replace:
-- `zegoAppId (integer)`
-- `zegoAppSign`
+- `YOUR_AGORA_APP_ID`
+- `YOUR_AGORA_TEMP_TOKEN`
 
 Rules:
-- Set these from your ZEGOCLOUD Console project:
-- `zegoAppId`: numeric App ID
-- `zegoAppSign`: App Sign string
+- If Agora project uses temporary token auth, set `agoraTempToken`.
+- If token is disabled in Agora project, set `agoraTempToken` to empty string `''`.
 
 ## 5) Firestore structure used by app
 
@@ -54,7 +53,7 @@ Rules:
 - title, position, duration
 - startTime, endTime
 - status (`scheduled|ongoing|completed|cancelled`)
-- roomId (used as ZEGOCLOUD callID)
+- roomId (used as Agora channel name)
 
 ## 6) Recommended Firestore rules (starter)
 ```txt
@@ -84,14 +83,14 @@ flutter run -d android
 - Google sign-in creates profile on first login with role from selected tab.
 - Profile completion is mandatory before dashboard.
 
-## 9) Video calling behavior (implemented with ZEGOCLOUD)
-- Interview `roomId` is the ZEGOCLOUD callID.
-- Interviewer and candidate join with role-prefixed user IDs based on Firebase UID.
-- Room `roomId` maps to a 1:1 ZEGOCLOUD call session.
-- Camera and microphone are enabled by default and controllable in-call.
+## 9) Video calling behavior (implemented)
+- Interview `roomId` is Agora channel ID.
+- Interviewer joins with UID 1, candidate joins with UID 2.
+- Local preview + remote video render.
+- Mic/camera toggle supported.
 
 ## 10) Common issues
 - **`Firebase init error`**: wrong/missing `google-services.json`.
 - **Remote user not visible**: users are not in same `roomId`.
-- **ZEGOCLOUD join failure**: invalid App ID/App Sign.
+- **Agora join failure**: invalid App ID/token.
 - **Login fails after signup**: verify email first.

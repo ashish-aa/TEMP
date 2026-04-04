@@ -3,7 +3,7 @@
 Skill Deck is a Flutter interview app with:
 - Firebase Auth + Firestore-backed user/interview data.
 - Role-based candidate/interviewer dashboards.
-- ZEGOCLOUD real-time video meetings.
+- Agora real-time video meetings.
 
 > This repository is now configured with **placeholders** for secrets. Follow `docs/ANDROID_SETUP.md` to run it.
 

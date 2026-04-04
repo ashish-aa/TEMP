@@ -121,11 +121,14 @@ class AppAuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> signInWithGoogle() async {
+  Future<bool> signInWithGoogle({required String role}) async {
     setLoading(true);
     _setError(null);
     try {
-      final cred = await _authService.signInWithGoogle();
+      final selectedRole = role == 'interviewer'
+          ? UserRole.interviewer
+          : UserRole.candidate;
+      final cred = await _authService.signInWithGoogle(role: selectedRole);
       if (cred == null || cred.user == null) {
         _setError("Google sign-in cancelled.");
         return false;
@@ -168,6 +171,8 @@ class AppAuthProvider extends ChangeNotifier {
           return 'Too many attempts. Try again later.';
         case 'network-request-failed':
           return 'Network error. Please check your connection.';
+        case 'email-not-verified':
+          return 'Please verify your email before signing in.';
         default:
           return e.message ?? 'Authentication failed.';
       }

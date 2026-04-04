@@ -19,6 +19,16 @@ class AuthService {
       password: password,
     );
     await credential.user?.reload();
+
+    final refreshed = _auth.currentUser;
+    if (refreshed != null && !refreshed.emailVerified) {
+      await _auth.signOut();
+      throw FirebaseAuthException(
+        code: 'email-not-verified',
+        message: 'Verify your email before signing in.',
+      );
+    }
+
     return credential;
   }
 
@@ -49,12 +59,16 @@ class AuthService {
           createdAt: DateTime.now(),
         ),
       );
+
+      await credential.user!.sendEmailVerification();
     }
     return credential;
   }
 
   // Google Sign-In
-  Future<UserCredential?> signInWithGoogle() async {
+  Future<UserCredential?> signInWithGoogle({
+    required UserRole role,
+  }) async {
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
     if (googleUser == null) return null;
 
@@ -85,7 +99,7 @@ class AuthService {
           email: userCredential.user!.email!,
           firstName: firstName,
           lastName: lastName,
-          role: UserRole.candidate,
+          role: role,
           profileImage: userCredential.user!.photoURL ?? '',
           createdAt: DateTime.now(),
         ),

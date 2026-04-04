@@ -31,7 +31,7 @@ dependencies:
   file_picker: ^8.1.7
   connectivity_plus: ^5.0.2
   internet_connection_checker: ^1.0.0+1
-  agora_rtc_engine: ^6.3.2
+  zego_uikit_prebuilt_call: ^4.17.0
 
 dev_dependencies:
   flutter_test:
